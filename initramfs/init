@@ -1,0 +1,30 @@
+#!/bin/busybox sh
+
+# Mount the /proc and /sys filesystems.
+mount -t proc proc /proc
+mount -t sysfs sysfs /sys
+mount -t devtmpfs devtmpfs /dev
+
+reset
+echo "Hello Worl!"
+echo " ;-)"
+echo ""
+
+# decrypt
+cryptsetup -T 99 --allow-discards luksOpen /dev/sda2 gentoo 
+
+#scan
+lvm vgscan --mknodes
+lvm lvchange -a ly vg1
+lvm vgscan --mknodes
+
+#mount
+mount -t ext4 /dev/mapper/vg1-root /mnt/root
+
+# Clean up.
+umount /proc
+umount /sys
+umount /dev
+
+# Boot the real thing.
+exec switch_root /mnt/root /sbin/init
